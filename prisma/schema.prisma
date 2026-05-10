@@ -1,0 +1,216 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum SubscriptionStatus {
+  INACTIVE
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
+enum OrderStatus {
+  INQUIRY
+  CONFIRMED
+  IN_PRODUCTION
+  COMPLETE
+  SHIPPED
+}
+
+enum HolidayType {
+  Q4
+  VALENTINES
+  MOTHERS_DAY
+}
+
+enum MemberRole {
+  OWNER
+  MEMBER
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+}
+
+model User {
+  id                   String               @id @default(cuid())
+  name                 String?
+  email                String?              @unique
+  emailVerified        DateTime?
+  image                String?
+  stripeCustomerId     String?
+  stripePriceId        String?
+  stripeSubscriptionId String?
+  subscriptionStatus   SubscriptionStatus   @default(INACTIVE)
+  trialEndsAt          DateTime?
+  onboardedAt          DateTime?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  accounts             Account[]
+  sessions             Session[]
+  ownedShops           Shop[]               @relation("ShopOwner")
+  memberships          ShopMember[]
+  sentInvites          ShopInvite[]         @relation("InviteSender")
+}
+
+model Shop {
+  id                     String         @id @default(cuid())
+  ownerId                String
+  name                   String
+  slug                   String         @unique
+  logoUrl                String?
+  accentColor            String         @default("#D05A36")
+  productionHoursPerWeek Int            @default(20)
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+  owner                  User           @relation("ShopOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  productTypes           ProductType[]
+  intakeForms            IntakeForm[]
+  orders                 Order[]
+  holidayPlans           HolidayPlan[]
+  members                ShopMember[]
+  invites                ShopInvite[]
+}
+
+model ShopMember {
+  id         String     @id @default(cuid())
+  shopId      String
+  userId      String
+  role        MemberRole @default(MEMBER)
+  createdAt   DateTime   @default(now())
+  shop        Shop       @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, userId])
+}
+
+model ShopInvite {
+  id           String       @id @default(cuid())
+  shopId        String
+  email         String
+  token         String       @unique
+  role          MemberRole   @default(MEMBER)
+  status        InviteStatus @default(PENDING)
+  invitedById   String
+  createdAt     DateTime     @default(now())
+  acceptedAt    DateTime?
+  shop          Shop         @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  invitedBy     User         @relation("InviteSender", fields: [invitedById], references: [id], onDelete: Cascade)
+}
+
+model ProductType {
+  id                       String   @id @default(cuid())
+  shopId                    String
+  name                      String
+  slug                      String
+  productionMinutesPerUnit  Int
+  createdAt                 DateTime @default(now())
+  shop                      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  orders                    Order[]
+
+  @@unique([shopId, slug])
+}
+
+model IntakeForm {
+  id         String   @id @default(cuid())
+  shopId      String
+  name        String
+  slug        String   @unique
+  fields      Json
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  shop        Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  orders      Order[]
+}
+
+model Order {
+  id               String      @id @default(cuid())
+  shopId           String
+  intakeFormId     String?
+  productTypeId    String?
+  customerName     String
+  customerEmail    String?
+  itemDescription  String
+  quantity         Int         @default(1)
+  dueDate          DateTime?
+  productionMinutes Int
+  status           OrderStatus @default(INQUIRY)
+  notes            String      @default("")
+  referenceFiles   Json?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  shop             Shop        @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  intakeForm       IntakeForm? @relation(fields: [intakeFormId], references: [id], onDelete: SetNull)
+  productType      ProductType? @relation(fields: [productTypeId], references: [id], onDelete: SetNull)
+}
+
+model HolidayPlan {
+  id                       String      @id @default(cuid())
+  shopId                    String
+  holidayType               HolidayType
+  shippingCutoffDate        DateTime
+  targetOrders              Int
+  itemsPerOrder             Int
+  minutesPerItem            Int
+  productionStartDate       DateTime
+  materialOrderDate         DateTime
+  weeklyBatchTargets        Json
+  materialReminderSentAt    DateTime?
+  productionReminderSentAt  DateTime?
+  createdAt                 DateTime    @default(now())
+  updatedAt                 DateTime    @updatedAt
+  shop                      Shop        @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, holidayType])
+}
+
+model LeadEmail {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  source     String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+}
+
+model Account {
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([sessionToken])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@id([identifier, token])
+}
