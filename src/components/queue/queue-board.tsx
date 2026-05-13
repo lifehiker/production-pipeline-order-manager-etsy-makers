@@ -10,8 +10,10 @@ import { formatDate, formatMinutes } from "@/lib/utils";
 
 const columns: Array<{ title: string; status: OrderStatus }> = [
   { title: "Inquiry", status: "INQUIRY" },
+  { title: "Confirmed", status: "CONFIRMED" },
   { title: "In Production", status: "IN_PRODUCTION" },
   { title: "Complete", status: "COMPLETE" },
+  { title: "Shipped", status: "SHIPPED" },
 ];
 
 type QueueOrder = {
@@ -81,7 +83,7 @@ export function QueueBoard({
       </Card>
 
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-4 xl:grid-cols-5">
           {columns.map((column) => (
             <div
               key={column.status}

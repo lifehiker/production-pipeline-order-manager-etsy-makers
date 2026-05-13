@@ -28,6 +28,7 @@ export async function ensureDemoUserScaffold(userId: string) {
   });
 
   const baseSlug = slugify(user.name || "maker shop");
+  const productTypeOptions = PRODUCT_TYPE_DEFAULTS.slice(0, 5).map((type) => type.name);
   const shop = await db.shop.create({
     data: {
       ownerId: userId,
@@ -64,6 +65,13 @@ export async function ensureDemoUserScaffold(userId: string) {
               type: "textarea",
               label: "What would you like made?",
               required: true,
+            },
+            {
+              id: "product-type",
+              type: "select",
+              label: "Product type",
+              required: true,
+              options: productTypeOptions,
             },
             {
               id: "needed-by",

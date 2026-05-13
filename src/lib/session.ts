@@ -21,7 +21,13 @@ export async function requireUser() {
       },
       memberships: {
         include: {
-          shop: true,
+          shop: {
+            include: {
+              productTypes: true,
+              intakeForms: true,
+              members: true,
+            },
+          },
         },
       },
     },
@@ -36,11 +42,45 @@ export async function requireUser() {
 
 export async function requirePrimaryShop() {
   const user = await requireUser();
-  const shop = user.ownedShops[0] ?? user.memberships[0]?.shop;
+  const shop = await getPrimaryShopForUserId(user.id);
 
   if (!shop) {
     redirect("/app/onboarding");
   }
 
   return { user, shop };
+}
+
+export async function getPrimaryShopForUserId(userId: string) {
+  const db = getDb();
+  return db.shop.findFirst({
+    where: {
+      OR: [
+        { ownerId: userId },
+        { members: { some: { userId } } },
+      ],
+    },
+    include: {
+      owner: true,
+      productTypes: true,
+      intakeForms: true,
+      members: true,
+    },
+    orderBy: { createdAt: "asc" },
+  });
+}
+
+export async function userCanAccessShop(userId: string, shopId: string) {
+  const db = getDb();
+  const count = await db.shop.count({
+    where: {
+      id: shopId,
+      OR: [
+        { ownerId: userId },
+        { members: { some: { userId } } },
+      ],
+    },
+  });
+
+  return count > 0;
 }

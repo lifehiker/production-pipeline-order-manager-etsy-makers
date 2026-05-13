@@ -3,10 +3,20 @@ import { requirePrimaryShop } from "@/lib/session";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SettingsForm } from "@/components/settings/settings-form";
 import { getBaseUrl } from "@/lib/utils";
 
-export default async function SettingsPage() {
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    saved?: string;
+    billing?: string;
+    invite?: string;
+  }>;
+}) {
   const { user, shop } = await requirePrimaryShop();
+  const params = await searchParams;
 
   return (
     <div className="space-y-6">
@@ -20,17 +30,17 @@ export default async function SettingsPage() {
       <div className="grid gap-6 xl:grid-cols-[1fr_0.9fr]">
         <Card>
           <h2 className="text-xl font-semibold">Shop profile</h2>
-          <form action="/api/settings" className="mt-5 grid gap-4" method="post">
-            <Input defaultValue={shop.name} name="name" />
-            <Input defaultValue={shop.accentColor} name="accentColor" type="color" className="h-14" />
-            <Input
-              defaultValue={shop.productionHoursPerWeek}
-              name="productionHoursPerWeek"
-              type="number"
-            />
-            <Input defaultValue={shop.logoUrl || ""} name="logoUrl" placeholder="/uploads/logo.png" />
-            <Button type="submit">Save settings</Button>
-          </form>
+          <SettingsForm
+            initialName={shop.name}
+            initialAccentColor={shop.accentColor}
+            initialProductionHoursPerWeek={shop.productionHoursPerWeek}
+            initialLogoUrl={shop.logoUrl || ""}
+          />
+          {params.saved === "1" ? (
+            <p className="mt-4 text-sm text-[var(--success)]">
+              Shop settings saved.
+            </p>
+          ) : null}
         </Card>
 
         <div className="space-y-6">
@@ -53,6 +63,17 @@ export default async function SettingsPage() {
                 </Button>
               </form>
             </div>
+            {params.billing ? (
+              <p className="mt-4 text-sm text-[var(--muted-ink)]">
+                {params.billing === "success"
+                  ? "Checkout completed. Stripe webhook sync will update your plan state as events arrive."
+                  : params.billing === "demo"
+                    ? "Stripe is not configured here, so billing stays in demo mode."
+                    : params.billing === "missing-price"
+                      ? "A Stripe price ID is missing for that plan."
+                      : "Billing flow was cancelled."}
+              </p>
+            ) : null}
           </Card>
 
           <Card>
@@ -64,6 +85,15 @@ export default async function SettingsPage() {
               <Input name="email" placeholder="teammate@example.com" type="email" />
               <Button type="submit">Send invite</Button>
             </form>
+            {params.invite ? (
+              <p className="mt-4 text-sm text-[var(--muted-ink)]">
+                {params.invite === "sent"
+                  ? "Invite created. If Resend is unavailable, the local accept link is still valid."
+                  : params.invite === "missing-email"
+                    ? "Enter an email address before sending an invite."
+                    : "That invite link is invalid, already used, or tied to a different email."}
+              </p>
+            ) : null}
             <p className="mt-4 text-xs text-[var(--muted-ink)]">
               Local base URL: {getBaseUrl()}
             </p>

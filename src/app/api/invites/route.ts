@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { sendAppEmail } from "@/lib/email";
 import { getDb } from "@/lib/prisma";
+import { getPrimaryShopForUserId } from "@/lib/session";
 import { getBaseUrl } from "@/lib/utils";
 
 export async function POST(request: Request) {
@@ -15,13 +16,15 @@ export async function POST(request: Request) {
 
   const formData = await request.formData();
   const email = String(formData.get("email") || "");
-  const db = getDb();
-  const shop = await db.shop.findFirst({ where: { ownerId: session.user.id } });
+  const shop = await getPrimaryShopForUserId(session.user.id);
 
   if (!shop || !email) {
-    return NextResponse.redirect(new URL("/app/settings", request.url));
+    return NextResponse.redirect(
+      new URL("/app/settings?invite=missing-email", request.url),
+    );
   }
 
+  const db = getDb();
   const token = randomUUID();
   await db.shopInvite.create({
     data: {
@@ -39,5 +42,5 @@ export async function POST(request: Request) {
     html: `<p>You were invited to collaborate on ${shop.name}.</p><p><a href="${inviteLink}">Accept the invite</a></p>`,
   });
 
-  return NextResponse.redirect(new URL("/app/settings", request.url));
+  return NextResponse.redirect(new URL("/app/settings?invite=sent", request.url));
 }

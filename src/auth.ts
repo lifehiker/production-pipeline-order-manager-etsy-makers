@@ -1,5 +1,5 @@
-import NextAuth from "next-auth";
-import type { Provider } from "next-auth/providers";
+import type { NextAuthOptions } from "next-auth";
+import NextAuth, { getServerSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
@@ -13,7 +13,7 @@ const demoSchema = z.object({
   name: z.string().min(2).max(50),
 });
 
-const providers: Provider[] = [
+const providers: NextAuthOptions["providers"] = [
   Credentials({
     id: "demo-login",
     name: "Demo workspace",
@@ -60,7 +60,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   );
 }
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(getDb()),
   providers,
   session: {
@@ -110,4 +110,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return true;
     },
   },
-});
+};
+
+export function auth() {
+  return getServerSession(authOptions);
+}
+
+export const nextAuthHandler = NextAuth(authOptions);

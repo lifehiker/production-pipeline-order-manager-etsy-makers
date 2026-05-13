@@ -16,6 +16,7 @@ type OrderRecord = {
   customerName: string;
   customerEmail: string | null;
   itemDescription: string;
+  productTypeName: string;
   quantity: number;
   dueDate: string | null;
   productionMinutes: number;
@@ -28,23 +29,52 @@ type OrderRecord = {
 export function OrdersTable({ initialOrders }: { initialOrders: OrderRecord[] }) {
   const [orders, setOrders] = useState(initialOrders);
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [productTypeFilter, setProductTypeFilter] = useState("ALL");
+  const [dueDateStart, setDueDateStart] = useState("");
+  const [dueDateEnd, setDueDateEnd] = useState("");
   const [search, setSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<OrderRecord | null>(
     initialOrders[0] || null,
   );
   const [pending, startTransition] = useTransition();
 
+  const productTypeOptions = useMemo(
+    () =>
+      Array.from(new Set(initialOrders.map((order) => order.productTypeName))).sort(),
+    [initialOrders],
+  );
+
   const filteredOrders = useMemo(
     () =>
       orders.filter((order) => {
         const matchesStatus =
           statusFilter === "ALL" ? true : order.status === statusFilter;
-        const haystack = `${order.customerName} ${order.itemDescription}`.toLowerCase();
+        const matchesProductType =
+          productTypeFilter === "ALL"
+            ? true
+            : order.productTypeName === productTypeFilter;
+        const dueDateValue = order.dueDate ? new Date(order.dueDate) : null;
+        const matchesDueDateStart =
+          !dueDateStart || !dueDateValue
+            ? true
+            : dueDateValue >= new Date(`${dueDateStart}T00:00:00`);
+        const matchesDueDateEnd =
+          !dueDateEnd || !dueDateValue
+            ? true
+            : dueDateValue <= new Date(`${dueDateEnd}T23:59:59`);
+        const haystack =
+          `${order.customerName} ${order.itemDescription} ${order.productTypeName}`.toLowerCase();
         const matchesSearch = haystack.includes(search.toLowerCase());
 
-        return matchesStatus && matchesSearch;
+        return (
+          matchesStatus &&
+          matchesProductType &&
+          matchesDueDateStart &&
+          matchesDueDateEnd &&
+          matchesSearch
+        );
       }),
-    [orders, search, statusFilter],
+    [dueDateEnd, dueDateStart, orders, productTypeFilter, search, statusFilter],
   );
 
   function updateOrder(orderId: string, payload: Partial<OrderRecord>) {
@@ -79,7 +109,7 @@ export function OrdersTable({ initialOrders }: { initialOrders: OrderRecord[] })
               Track every incoming custom request in one place.
             </p>
           </div>
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <Input
               placeholder="Search customer or item"
               value={search}
@@ -96,6 +126,31 @@ export function OrdersTable({ initialOrders }: { initialOrders: OrderRecord[] })
                 </option>
               ))}
             </Select>
+            <Select
+              value={productTypeFilter}
+              onChange={(event) => setProductTypeFilter(event.target.value)}
+            >
+              <option value="ALL">All product types</option>
+              {productTypeOptions.map((productType) => (
+                <option key={productType} value={productType}>
+                  {productType}
+                </option>
+              ))}
+            </Select>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Input
+                aria-label="Due date start"
+                type="date"
+                value={dueDateStart}
+                onChange={(event) => setDueDateStart(event.target.value)}
+              />
+              <Input
+                aria-label="Due date end"
+                type="date"
+                value={dueDateEnd}
+                onChange={(event) => setDueDateEnd(event.target.value)}
+              />
+            </div>
           </div>
         </div>
 
@@ -105,6 +160,7 @@ export function OrdersTable({ initialOrders }: { initialOrders: OrderRecord[] })
               <tr>
                 <th className="px-4 py-3">Customer</th>
                 <th className="px-4 py-3">Item</th>
+                <th className="px-4 py-3">Type</th>
                 <th className="px-4 py-3">Qty</th>
                 <th className="px-4 py-3">Due</th>
                 <th className="px-4 py-3">Production</th>
@@ -112,36 +168,45 @@ export function OrdersTable({ initialOrders }: { initialOrders: OrderRecord[] })
               </tr>
             </thead>
             <tbody>
-              {filteredOrders.map((order) => (
-                <tr
-                  key={order.id}
-                  className="cursor-pointer border-t border-[var(--line)] hover:bg-[var(--canvas)]"
-                  onClick={() => setSelectedOrder(order)}
-                >
-                  <td className="px-4 py-3">{order.customerName}</td>
-                  <td className="px-4 py-3">{order.itemDescription}</td>
-                  <td className="px-4 py-3">{order.quantity}</td>
-                  <td className="px-4 py-3">{formatDate(order.dueDate)}</td>
-                  <td className="px-4 py-3">{formatMinutes(order.productionMinutes)}</td>
-                  <td className="px-4 py-3">
-                    <Select
-                      className="min-w-40"
-                      value={order.status}
-                      onChange={(event) =>
-                        updateOrder(order.id, {
-                          status: event.target.value as OrderStatus,
-                        })
-                      }
-                    >
-                      {ORDER_STATUSES.map((status) => (
-                        <option key={status} value={status}>
-                          {status.replaceAll("_", " ")}
-                        </option>
-                      ))}
-                    </Select>
+              {filteredOrders.length ? (
+                filteredOrders.map((order) => (
+                  <tr
+                    key={order.id}
+                    className="cursor-pointer border-t border-[var(--line)] hover:bg-[var(--canvas)]"
+                    onClick={() => setSelectedOrder(order)}
+                  >
+                    <td className="px-4 py-3">{order.customerName}</td>
+                    <td className="px-4 py-3">{order.itemDescription}</td>
+                    <td className="px-4 py-3">{order.productTypeName}</td>
+                    <td className="px-4 py-3">{order.quantity}</td>
+                    <td className="px-4 py-3">{formatDate(order.dueDate)}</td>
+                    <td className="px-4 py-3">{formatMinutes(order.productionMinutes)}</td>
+                    <td className="px-4 py-3">
+                      <Select
+                        className="min-w-40"
+                        value={order.status}
+                        onChange={(event) =>
+                          updateOrder(order.id, {
+                            status: event.target.value as OrderStatus,
+                          })
+                        }
+                      >
+                        {ORDER_STATUSES.map((status) => (
+                          <option key={status} value={status}>
+                            {status.replaceAll("_", " ")}
+                          </option>
+                        ))}
+                      </Select>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td className="px-4 py-5 text-[var(--muted-ink)]" colSpan={7}>
+                    No orders match the current filters.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
@@ -162,7 +227,7 @@ export function OrdersTable({ initialOrders }: { initialOrders: OrderRecord[] })
               <p className="text-sm text-[var(--muted-ink)]">Order</p>
               <p className="font-medium">{selectedOrder.itemDescription}</p>
               <p className="text-sm text-[var(--muted-ink)]">
-                Qty {selectedOrder.quantity} • {formatMinutes(selectedOrder.productionMinutes)}
+                {selectedOrder.productTypeName} • Qty {selectedOrder.quantity} • {formatMinutes(selectedOrder.productionMinutes)}
               </p>
             </div>
             <div>

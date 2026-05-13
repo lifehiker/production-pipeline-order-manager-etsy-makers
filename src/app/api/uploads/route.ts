@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
 
+import { auth } from "@/auth";
 import { saveUploadedFile } from "@/lib/storage";
 
 export async function POST(request: Request) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const formData = await request.formData();
   const file = formData.get("file");
 

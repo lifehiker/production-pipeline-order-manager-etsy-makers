@@ -37,20 +37,31 @@ export async function POST(request: Request) {
     values["item-description"] || values["itemDescription"] || "Custom order",
   );
   const quantity = Number(values.quantity || 1);
-  const dueDateString = String(values["due-date"] || values.dueDate || "");
-  const firstProductType = intakeForm.shop.productTypes[0];
+  const dueDateString = String(
+    values["due-date"] || values["needed-by"] || values.dueDate || "",
+  );
+  const requestedProductType = String(
+    values["product-type"] || values.productType || "",
+  ).trim();
+  const selectedProductType =
+    intakeForm.shop.productTypes.find(
+      (productType) =>
+        productType.id === requestedProductType ||
+        productType.name.toLowerCase() === requestedProductType.toLowerCase(),
+    ) || intakeForm.shop.productTypes[0];
 
   await db.order.create({
     data: {
       shopId: intakeForm.shopId,
       intakeFormId: intakeForm.id,
+      productTypeId: selectedProductType?.id,
       customerName,
       customerEmail,
       itemDescription,
       quantity,
       dueDate: dueDateString ? new Date(dueDateString) : null,
       productionMinutes:
-        quantity * (firstProductType?.productionMinutesPerUnit || 45),
+        quantity * (selectedProductType?.productionMinutesPerUnit || 45),
       notes: JSON.stringify(values, null, 2),
       referenceFiles,
     },

@@ -16,14 +16,16 @@ type PlannerToolProps = {
   ctaLabel?: string;
 };
 
+type HolidayKey = keyof typeof HOLIDAY_DEFAULTS;
+
 export function PlannerTool({
   shopId,
   saveEnabled = false,
   ctaHref,
   ctaLabel,
 }: PlannerToolProps) {
-  const [holidayType, setHolidayType] = useState<keyof typeof HOLIDAY_DEFAULTS>("Q4");
-  const [shippingCutoffDate, setShippingCutoffDate] = useState(
+  const [holidayType, setHolidayType] = useState<HolidayKey>("Q4");
+  const [shippingCutoffDate, setShippingCutoffDate] = useState<string>(
     HOLIDAY_DEFAULTS.Q4.cutoff,
   );
   const [targetOrders, setTargetOrders] = useState("40");
@@ -76,7 +78,7 @@ export function PlannerTool({
             className="rounded-2xl border border-[var(--line)] px-4 py-3"
             value={holidayType}
             onChange={(event) => {
-              const nextType = event.target.value as keyof typeof HOLIDAY_DEFAULTS;
+              const nextType = event.target.value as HolidayKey;
               setHolidayType(nextType);
               setShippingCutoffDate(HOLIDAY_DEFAULTS[nextType].cutoff);
             }}

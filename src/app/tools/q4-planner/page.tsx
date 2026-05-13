@@ -1,5 +1,6 @@
 import { PlannerTool } from "@/components/planner/planner-tool";
 import { Card } from "@/components/ui/card";
+import { SiteShell } from "@/components/layout/site-shell";
 
 export const metadata = {
   title: "Etsy Q4 Holiday Prep Planning Tool | MakerPipeline",
@@ -9,6 +10,7 @@ export const metadata = {
 
 export default function Q4PlannerPage() {
   return (
+    <SiteShell>
     <main className="mx-auto max-w-6xl px-6 py-14">
       <div className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
         <Card className="bg-[linear-gradient(160deg,#1d1512_0%,#5d3426_55%,#c5653f_100%)] text-white">
@@ -31,5 +33,6 @@ export default function Q4PlannerPage() {
         </div>
       </form>
     </main>
+    </SiteShell>
   );
 }

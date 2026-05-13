@@ -8,10 +8,13 @@ import type { IntakeField } from "@/lib/types";
 
 export default async function PublicFormPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ formSlug: string }>;
+  searchParams: Promise<{ submitted?: string; error?: string }>;
 }) {
   const { formSlug } = await params;
+  const query = await searchParams;
   const db = getDb();
   const form = await db.intakeForm.findUnique({
     where: { slug: formSlug },
@@ -35,6 +38,13 @@ export default async function PublicFormPage({
       }
     >
       <Card className="mx-auto max-w-3xl">
+        {form.shop.logoUrl ? (
+          <img
+            src={form.shop.logoUrl}
+            alt={`${form.shop.name} logo`}
+            className="h-16 w-16 rounded-3xl object-cover"
+          />
+        ) : null}
         <p className="text-sm uppercase tracking-[0.2em] text-[var(--muted-ink)]">
           {form.shop.name}
         </p>
@@ -42,6 +52,19 @@ export default async function PublicFormPage({
         <p className="mt-4 text-sm leading-7 text-[var(--muted-ink)]">
           Tell us what you need, your timeline, and any reference details. Your request will go straight into the production dashboard.
         </p>
+        {query.submitted === "1" ? (
+          <div className="mt-6 rounded-[24px] border border-[var(--line)] bg-[var(--canvas)] p-4">
+            <p className="font-medium">Request received</p>
+            <p className="mt-1 text-sm text-[var(--muted-ink)]">
+              Your custom order request is now in the seller’s production dashboard. If they need clarification, they’ll follow up by email.
+            </p>
+          </div>
+        ) : null}
+        {query.error === "missing" ? (
+          <div className="mt-6 rounded-[24px] border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            This intake form is no longer available.
+          </div>
+        ) : null}
 
         <form action="/api/orders" className="mt-8 space-y-4" method="post" encType="multipart/form-data">
           <input type="hidden" name="formSlug" value={form.slug} />

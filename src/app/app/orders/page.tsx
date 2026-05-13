@@ -7,6 +7,7 @@ export default async function OrdersPage() {
   const db = getDb();
   const orders = await db.order.findMany({
     where: { shopId: shop.id },
+    include: { productType: true },
     orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
   });
 
@@ -14,6 +15,7 @@ export default async function OrdersPage() {
     <OrdersTable
       initialOrders={orders.map((order) => ({
         ...order,
+        productTypeName: order.productType?.name || "Unassigned",
         dueDate: order.dueDate?.toISOString() || null,
         createdAt: order.createdAt.toISOString(),
         updatedAt: order.updatedAt.toISOString(),

@@ -14,11 +14,14 @@ export default async function DashboardPage() {
   const { shop, user } = await requirePrimaryShop();
   const db = getDb();
 
-  const [orders, plans] = await Promise.all([
+  const [recentOrders, totalOrders, plans] = await Promise.all([
     db.order.findMany({
       where: { shopId: shop.id },
       orderBy: { createdAt: "desc" },
       take: 6,
+    }),
+    db.order.count({
+      where: { shopId: shop.id },
     }),
     db.holidayPlan.findMany({
       where: { shopId: shop.id },
@@ -27,7 +30,7 @@ export default async function DashboardPage() {
     }),
   ]);
 
-  const inProductionMinutes = orders
+  const inProductionMinutes = recentOrders
     .filter((order) => order.status === "IN_PRODUCTION")
     .reduce((sum, order) => sum + order.productionMinutes, 0);
   const dailyCapacityMinutes = Math.max(
@@ -66,7 +69,7 @@ export default async function DashboardPage() {
       <section className="grid gap-4 lg:grid-cols-4">
         <Card>
           <p className="text-sm text-[var(--muted-ink)]">Active orders</p>
-          <p className="mt-3 text-4xl font-semibold">{orders.length}</p>
+          <p className="mt-3 text-4xl font-semibold">{totalOrders}</p>
         </Card>
         <Card>
           <p className="text-sm text-[var(--muted-ink)]">In production today</p>
@@ -174,8 +177,8 @@ export default async function DashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {orders.length ? (
-                orders.map((order) => (
+              {recentOrders.length ? (
+                recentOrders.map((order) => (
                   <tr key={order.id} className="border-t border-[var(--line)]">
                     <td className="px-4 py-3">{order.customerName}</td>
                     <td className="px-4 py-3">{order.itemDescription}</td>

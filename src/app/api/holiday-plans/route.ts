@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { auth } from "@/auth";
 import { getDb } from "@/lib/prisma";
+import { getPrimaryShopForUserId } from "@/lib/session";
 
 const schema = z.object({
   holidayType: z.enum(["Q4", "VALENTINES", "MOTHERS_DAY"]),
@@ -35,12 +36,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
 
-  const db = getDb();
-  const shop = await db.shop.findFirst({ where: { ownerId: session.user.id } });
+  const shop = await getPrimaryShopForUserId(session.user.id);
   if (!shop) {
     return NextResponse.json({ error: "Shop missing" }, { status: 404 });
   }
 
+  const db = getDb();
   const plan = await db.holidayPlan.upsert({
     where: {
       shopId_holidayType: {

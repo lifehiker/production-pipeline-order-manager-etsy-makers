@@ -1,10 +1,9 @@
 import { redirect } from "next/navigation";
 
-import { auth, signIn } from "@/auth";
+import { auth } from "@/auth";
+import { LoginActions } from "@/components/auth/login-actions";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 
 export default async function LoginPage({
   searchParams,
@@ -53,58 +52,10 @@ export default async function LoginPage({
             </p>
           </div>
 
-          {googleEnabled ? (
-            <form
-              action={async () => {
-                "use server";
-                await signIn("google", { redirectTo: callbackUrl });
-              }}
-              className="mt-6"
-            >
-              <Button className="w-full" size="lg">
-                Continue with Google
-              </Button>
-            </form>
-          ) : (
-            <div className="mt-6 rounded-3xl border border-dashed border-[var(--line)] bg-[var(--canvas)] p-4 text-sm text-[var(--muted-ink)]">
-              Google OAuth is not configured in this environment. The demo workspace stays fully usable without it.
-            </div>
-          )}
-
-          <div className="my-6 flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-[var(--muted-ink)]">
-            <span className="h-px flex-1 bg-[var(--line)]" />
-            Demo workspace
-            <span className="h-px flex-1 bg-[var(--line)]" />
-          </div>
-
-          <form
-            action={async (formData) => {
-              "use server";
-              await signIn("demo-login", {
-                email: String(formData.get("email") || ""),
-                name: String(formData.get("name") || ""),
-                redirectTo: callbackUrl,
-              });
-            }}
-            className="space-y-4"
-          >
-            <div>
-              <label className="mb-2 block text-sm font-medium">Your name</label>
-              <Input name="name" placeholder="Avery from Sunbeam Studio" required />
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium">Email</label>
-              <Input
-                name="email"
-                placeholder="avery@example.com"
-                type="email"
-                required
-              />
-            </div>
-            <Button className="w-full" size="lg" type="submit">
-              Start demo trial
-            </Button>
-          </form>
+          <LoginActions
+            callbackUrl={callbackUrl}
+            googleEnabled={googleEnabled}
+          />
         </Card>
       </div>
     </main>

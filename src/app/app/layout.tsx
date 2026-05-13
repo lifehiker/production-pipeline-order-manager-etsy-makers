@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CalendarRange, ClipboardList, LayoutDashboard, LogOut, Settings2, Shapes } from "lucide-react";
+import { CalendarRange, ClipboardList, LayoutDashboard, Settings2, Shapes } from "lucide-react";
 
-import { auth, signOut } from "@/auth";
+import { auth } from "@/auth";
+import { SignOutButton } from "@/components/auth/sign-out-button";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { requireUser } from "@/lib/session";
 
 const navigation = [
@@ -85,18 +85,9 @@ export default async function AppLayout({
             )}
           </div>
 
-          <form
-            action={async () => {
-              "use server";
-              await signOut({ redirectTo: "/" });
-            }}
-            className="mt-6"
-          >
-            <Button className="w-full" variant="secondary" type="submit">
-              <LogOut className="mr-2 h-4 w-4" />
-              Sign out
-            </Button>
-          </form>
+          <div className="mt-6">
+            <SignOutButton />
+          </div>
         </aside>
         <main className="surface rounded-[32px] border border-white/80 p-4 lg:p-6">
           {children}

@@ -7,11 +7,14 @@ import { PRODUCT_TYPE_DEFAULTS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { LogoUploadField } from "@/components/ui/logo-upload-field";
 import { Textarea } from "@/components/ui/textarea";
 
 type OnboardingFormProps = {
   initialName?: string;
 };
+
+type ProductTypeSlug = (typeof PRODUCT_TYPE_DEFAULTS)[number]["slug"];
 
 export function OnboardingForm({ initialName = "" }: OnboardingFormProps) {
   const router = useRouter();
@@ -22,7 +25,7 @@ export function OnboardingForm({ initialName = "" }: OnboardingFormProps) {
   const [accentColor, setAccentColor] = useState("#D05A36");
   const [weeklyHours, setWeeklyHours] = useState("20");
   const [logoUrl, setLogoUrl] = useState("");
-  const [selectedTypes, setSelectedTypes] = useState(
+  const [selectedTypes, setSelectedTypes] = useState<ProductTypeSlug[]>(
     PRODUCT_TYPE_DEFAULTS.slice(0, 3).map((type) => type.slug),
   );
   const [notes, setNotes] = useState("");
@@ -32,7 +35,7 @@ export function OnboardingForm({ initialName = "" }: OnboardingFormProps) {
     [selectedTypes],
   );
 
-  function toggleType(slug: string) {
+  function toggleType(slug: ProductTypeSlug) {
     setSelectedTypes((current) =>
       current.includes(slug)
         ? current.filter((item) => item !== slug)
@@ -110,14 +113,12 @@ export function OnboardingForm({ initialName = "" }: OnboardingFormProps) {
                 className="h-14"
               />
             </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium">Logo URL</label>
-              <Input
-                value={logoUrl}
-                onChange={(event) => setLogoUrl(event.target.value)}
-                placeholder="/uploads/your-logo.png"
-              />
-            </div>
+            <LogoUploadField
+              label="Logo"
+              value={logoUrl}
+              onChange={setLogoUrl}
+              helperText="Upload a mark now or paste an existing asset URL. The public form and app shell will reuse it."
+            />
           </div>
           <div className="flex justify-end">
             <Button onClick={() => setStep(2)} disabled={!shopName.trim()}>

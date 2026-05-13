@@ -13,8 +13,14 @@ export async function GET(request: Request) {
 
   const db = getDb();
   const invite = await db.shopInvite.findUnique({ where: { token } });
-  if (!invite) {
-    return NextResponse.redirect(new URL("/app/settings", request.url));
+  if (!invite || invite.status !== "PENDING") {
+    return NextResponse.redirect(new URL("/app/settings?invite=invalid", request.url));
+  }
+
+  if (
+    invite.email.toLowerCase() !== (session.user.email || "").toLowerCase()
+  ) {
+    return NextResponse.redirect(new URL("/app/settings?invite=invalid", request.url));
   }
 
   await db.shopMember.upsert({

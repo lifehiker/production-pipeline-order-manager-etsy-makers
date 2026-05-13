@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { auth } from "@/auth";
 import { getDb } from "@/lib/prisma";
+import { userCanAccessShop } from "@/lib/session";
 
 const schema = z.object({
   name: z.string().min(2),
@@ -35,13 +36,21 @@ export async function PUT(
   }
 
   const db = getDb();
-  const shop = await db.shop.findFirst({ where: { ownerId: session.user.id } });
-  if (!shop) {
-    return NextResponse.json({ error: "Shop not found" }, { status: 404 });
+  const existingForm = await db.intakeForm.findUnique({
+    where: { id: formId },
+    select: { id: true, shopId: true },
+  });
+
+  if (!existingForm) {
+    return NextResponse.json({ error: "Form not found" }, { status: 404 });
+  }
+
+  if (!(await userCanAccessShop(session.user.id, existingForm.shopId))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const form = await db.intakeForm.update({
-    where: { id: formId, shopId: shop.id },
+    where: { id: formId },
     data: {
       name: parsed.data.name,
       fields: parsed.data.fields,

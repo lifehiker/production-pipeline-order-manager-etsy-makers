@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { auth } from "@/auth";
 import { getDb } from "@/lib/prisma";
+import { userCanAccessShop } from "@/lib/session";
 
 const schema = z.object({
   status: z
@@ -29,6 +30,19 @@ export async function PATCH(
   }
 
   const db = getDb();
+  const existingOrder = await db.order.findUnique({
+    where: { id: orderId },
+    select: { id: true, shopId: true },
+  });
+
+  if (!existingOrder) {
+    return NextResponse.json({ error: "Order not found" }, { status: 404 });
+  }
+
+  if (!(await userCanAccessShop(session.user.id, existingOrder.shopId))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const order = await db.order.update({
     where: { id: orderId },
     data: {

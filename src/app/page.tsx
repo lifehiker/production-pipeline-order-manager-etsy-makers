@@ -1,6 +1,9 @@
+import { SiteShell } from "@/components/layout/site-shell";
+
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[var(--canvas)] text-[var(--ink)]">
+    <SiteShell>
+    <div className="bg-[var(--canvas)] text-[var(--ink)]">
       <main className="mx-auto max-w-7xl px-6 py-12 lg:px-10 lg:py-16">
         <section className="hero-grid relative overflow-hidden rounded-[40px] border border-white/80 bg-[linear-gradient(140deg,rgba(255,255,255,0.9),rgba(255,248,241,0.82))] px-8 py-10 lg:px-12 lg:py-14">
           <div className="absolute right-0 top-0 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(197,101,63,0.18),transparent_62%)]" />
@@ -63,5 +66,6 @@ export default function Home() {
         </section>
       </main>
     </div>
+    </SiteShell>
   );
 }

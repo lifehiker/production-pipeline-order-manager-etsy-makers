@@ -37,6 +37,7 @@ export async function POST(request: Request) {
   const existingShops = await db.shop.count({
     where: { slug: { startsWith: baseSlug } },
   });
+  const productTypeOptions = parsed.data.productTypes.map((type) => type.name);
 
   const shop = await db.shop.create({
     data: {
@@ -71,6 +72,13 @@ export async function POST(request: Request) {
               type: "textarea",
               label: "Order details",
               required: true,
+            },
+            {
+              id: "product-type",
+              type: "select",
+              label: "Product type",
+              required: true,
+              options: productTypeOptions,
             },
             {
               id: "quantity",
