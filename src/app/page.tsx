@@ -1,6 +1,7 @@
 import { SiteShell } from "@/components/layout/site-shell";
 
 export const dynamic = "force-static";
+export const revalidate = false;
 
 export default function Home() {
   return (
