@@ -1,3 +1,5 @@
+export const dynamic = 'force-static';
+
 const posts = [
   {
     href: "/blog/how-to-plan-etsy-q4-production-schedule",
