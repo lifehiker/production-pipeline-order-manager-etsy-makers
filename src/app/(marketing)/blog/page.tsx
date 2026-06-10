@@ -1,5 +1,5 @@
 export const dynamic = 'force-static';
-export const revalidate = false;
+export const revalidate = 0;
 
 const posts = [
   {
