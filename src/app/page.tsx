@@ -1,7 +1,6 @@
 import { SiteShell } from "@/components/layout/site-shell";
 
 export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
 
 export default function Home() {
   return (
