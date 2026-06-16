@@ -1,5 +1,4 @@
 export const dynamic = 'force-static';
-export const revalidate = false;
 
 export default function BlogPostThree() {
   return (
