@@ -1,5 +1,3 @@
-export const dynamic = 'force-static';
-
 export default function BlogPostThree() {
   return (
     <main className="mx-auto max-w-3xl px-6 py-14">
