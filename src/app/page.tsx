@@ -1,11 +1,8 @@
-import { headers } from "next/headers";
-
 import { SiteShell } from "@/components/layout/site-shell";
 
 export const dynamic = "force-dynamic";
 
-export default async function Home() {
-  await headers();
+export default function Home() {
   return (
     <SiteShell>
     <div className="bg-[var(--canvas)] text-[var(--ink)]">
